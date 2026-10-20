@@ -1,0 +1,79 @@
+@inject AuthService AuthService
+@inject NavigationManager Nav
+@inject LocalizationService Loc
+
+<div class="auth-form">
+    <div class="auth-input">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <input type="text"
+               autocomplete="username"
+               placeholder="@Loc.T("auth.login.placeholder")"
+               @bind="login"
+               @bind:event="oninput" />
+    </div>
+
+    <PasswordInput OnInputPassword="p => password1 = p" PlaceHolder="@Loc.T("auth.password.create.placeholder")" />
+    <PasswordInput OnInputPassword="p => password2 = p" OnSubmit="DoRegister" PlaceHolder="@Loc.T("auth.password.repeat.placeholder")" />
+
+    <label class="auth-terms">
+        <input type="checkbox" @bind="acceptedTerms" />
+        <span>
+            @Loc.T("auth.terms.prefix") <a href="javascript:void(0)" class="auth-link">@Loc.T("auth.terms.tos")</a> @Loc.T("auth.terms.and") <a href="javascript:void(0)" class="auth-link">@Loc.T("auth.terms.privacy")</a>
+        </span>
+    </label>
+
+    <button type="button" class="auth-submit-btn" @onclick="DoRegister" disabled="@isBusy">
+        @if (isBusy)
+        {
+            <span class="btn-spinner"></span>
+        }
+        @Loc.T("auth.submit.register")
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<string> ErrorMessage { get; set; }
+
+    private string login = "";
+    private string password1 = "";
+    private string password2 = "";
+    private bool acceptedTerms;
+    private bool isBusy;
+
+    private async Task DoRegister()
+    {
+        if (isBusy) return;
+        await ErrorMessage.InvokeAsync("");
+
+        if (string.IsNullOrWhiteSpace(login) || string.IsNullOrEmpty(password1))
+        {
+            await ErrorMessage.InvokeAsync(Loc.T("auth.error.fillAll"));
+            return;
+        }
+
+        if (password1 != password2)
+        {
+            await ErrorMessage.InvokeAsync(Loc.T("auth.error.passwordMismatch"));
+            return;
+        }
+
+        if (!acceptedTerms)
+        {
+            await ErrorMessage.InvokeAsync(Loc.T("auth.error.termsRequired"));
+            return;
+        }
+
+        isBusy = true;
+        var error = await AuthService.RegisterAsync(login, password1);
+        isBusy = false;
+
+        if (error is not null)
+        {
+            await ErrorMessage.InvokeAsync(Loc.T(error));
+            return;
+        }
+
+        Nav.NavigateTo("/");
+    }
+}

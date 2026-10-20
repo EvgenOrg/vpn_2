@@ -1,0 +1,77 @@
+@inject NodeStorage ns
+@inject LocalizationService Loc
+
+<div class="sheet-backdrop" @onclick="Close"></div>
+
+<div class="sheet" role="dialog" aria-modal="true">
+    <div class="sheet-handle"></div>
+
+    <h3 class="sheet-title">@Loc.T("servers.add.title")</h3>
+    <p class="sheet-sub">@Loc.T("servers.add.sub")</p>
+
+    @if (!string.IsNullOrEmpty(error))
+    {
+        <div class="sheet-error" @key="errorTick">@error</div>
+    }
+
+    <textarea class="sheet-input sheet-link"
+              rows="4"
+              spellcheck="false"
+              placeholder="vless://uuid@host:443?security=reality&sni=...&pbk=...#Name"
+              @bind="link"
+              @bind:event="oninput"></textarea>
+
+    <div class="sheet-row">
+        <input class="sheet-input"
+               placeholder="@Loc.T("servers.add.name.placeholder")"
+               @bind="name"
+               @bind:event="oninput" />
+        <input class="sheet-input sheet-country"
+               maxlength="2"
+               placeholder="DE"
+               @bind="country"
+               @bind:event="oninput" />
+    </div>
+    <p class="sheet-hint">@Loc.T("servers.add.country.hint")</p>
+
+    <div class="sheet-actions">
+        <button type="button" class="sheet-btn sheet-btn-ghost" @onclick="Close">@Loc.T("servers.add.cancel")</button>
+        <button type="button" class="sheet-btn sheet-btn-primary" @onclick="Add">@Loc.T("servers.add.submit")</button>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private string link = "";
+    private string name = "";
+    private string country = "DE";
+    private string? error;
+    private int errorTick;
+
+    private async Task Close() => await OnClose.InvokeAsync();
+
+    private async Task Add()
+    {
+        try
+        {
+            var node = VlessLink.Parse(link);
+
+            if (!string.IsNullOrWhiteSpace(name)) node.Name = name.Trim();
+
+            var code = (country ?? "").Trim().ToUpperInvariant();
+            node.Country = code.Length == 2 && code.All(char.IsLetter) ? code : "DE";
+
+            ns.Add(node);
+            _ = ns.CheckAsync(node);
+
+            await OnClose.InvokeAsync();
+        }
+        catch (VlessParseException ex)
+        {
+            error = Loc.T(ex.Key);
+            errorTick++;
+        }
+    }
+}

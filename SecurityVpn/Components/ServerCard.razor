@@ -1,0 +1,139 @@
+@inject NavigationManager NavManager
+@inject NodeStorage ns
+@inject LocalizationService Loc
+
+<div class="server-card reveal @(IsSelected ? "is-selected" : "") @(IsDisabled ? "is-disabled" : "")"
+     style="--i:@Index"
+     role="button"
+     tabindex="0"
+     aria-disabled="@(IsDisabled ? "true" : "false")"
+     @onclick="HandleClick"
+     @onkeydown="HandleKey">
+
+    <div class="server-flag-wrap">
+        <span class="server-flag">@FlagParser.GetCountryFlag(node.Country)</span>
+        <span class="server-online-dot @(node.IsOnline ? "online" : "offline")"></span>
+    </div>
+
+    <div class="server-info">
+        <div class="server-country">@node.Name</div>
+        <div class="server-location">@CountryNames.GetName(node.Country, Loc.CurrentLanguage)</div>
+
+        @if (node.Id != Guid.Empty)
+        {
+            <div class="server-tags">
+                <span class="server-tag">@node.Protocol</span>
+                @if (node.IsDemo)
+                {
+                    <span class="server-tag demo">DEMO</span>
+                }
+            </div>
+        }
+    </div>
+
+    <div class="server-stats">
+        <span class="server-status @StatusClass">@StatusText</span>
+    </div>
+
+    @if (CanDelete)
+    {
+        <button type="button"
+                class="server-delete @(confirming ? "is-confirm" : "")"
+                aria-label="delete"
+                @onclick="HandleDelete"
+                @onclick:stopPropagation="true">
+            @if (confirming)
+            {
+                <span>@Loc.T("servers.delete.confirm")</span>
+            }
+            else
+            {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            }
+        </button>
+    }
+    else
+    {
+        <svg class="server-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public Node node { get; set; } = Node.GetNullNode();
+
+    /// <summary>Куда перейти после выбора сервера.</summary>
+    [Parameter]
+    public string red { get; set; } = "/";
+
+    /// <summary>Порядковый номер — для каскадного появления карточек.</summary>
+    [Parameter]
+    public int Index { get; set; }
+
+    /// <summary>Если задан — у своих серверов появляется кнопка удаления.</summary>
+    [Parameter]
+    public EventCallback<Node> OnDelete { get; set; }
+
+    private bool confirming;
+
+    private bool IsSelected =>
+        node.Id != Guid.Empty && ns.SelectedNode?.Id == node.Id;
+
+    // Выбрать можно только живой сервер (или тот, который сейчас проверяется)
+    private bool IsDisabled => node.Id != Guid.Empty && !node.IsOnline && !node.IsChecking;
+
+    private bool CanDelete => OnDelete.HasDelegate && !node.IsDemo && node.Id != Guid.Empty;
+
+    private string StatusClass => node.IsChecking ? "is-checking" : node.IsOnline ? "is-online" : "is-offline";
+
+    private string StatusText =>
+        node.IsChecking ? Loc.T("servers.ping.checking")
+        : node.IsOnline ? (node.PingMs > 0 ? $"{node.PingMs} {Loc.T("unit.ms")}" : Loc.T("servercard.online"))
+        : Loc.T("servercard.offline");
+
+    private void HandleClick()
+    {
+        if (node.Id == Guid.Empty)
+        {
+            NavManager.NavigateTo(red);
+            return;
+        }
+
+        if (IsDisabled) return;
+
+        ns.HasChanged = true;
+        ns.SelectedNode = node;
+        NavManager.NavigateTo(red);
+    }
+
+    private void HandleKey(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ") HandleClick();
+    }
+
+    private async Task HandleDelete()
+    {
+        // Двухшаговое удаление: первое нажатие просит подтверждения, второе удаляет
+        if (!confirming)
+        {
+            confirming = true;
+            _ = ResetConfirmAsync();
+            return;
+        }
+
+        confirming = false;
+        await OnDelete.InvokeAsync(node);
+    }
+
+    private async Task ResetConfirmAsync()
+    {
+        await Task.Delay(3000);
+        if (confirming)
+        {
+            confirming = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+}

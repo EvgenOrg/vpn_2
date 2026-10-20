@@ -1,0 +1,42 @@
+/* .app-shell больше не позволяет документу (html/body) скроллиться —
+   он занимает ровно 100dvh и сам не скроллится (overflow: hidden).
+   Скроллится только .app-content внутри него.
+   Почему: раньше скроллился весь body, а .nav-menu висел
+   position: fixed поверх него. На Android WebView (Chromium) это
+   провоцирует известный баг — после скролла длинной страницы (Profile
+   в приложении самая длинная) fixed-элемент может перестать получать
+   тач-события: тапаешь по иконке навбара — и ничего не происходит.
+   Когда скроллится не документ, а вложенный контейнер, а сам навбар
+   физически находится вне скролл-контекста, у WebView нет повода
+   терять по нему тачи. */
+.app-shell {
+    position: relative;
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg-app);
+}
+
+.app-content {
+    flex: 1;
+    min-height: 0; /* обязательно для flex-ребёнка, иначе overflow-y не сработает */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+    padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    box-sizing: border-box;
+}
+
+/* Десктоп/ПК (широкий экран, мышь+клавиатура): нижний таб-бар
+   превращается в левый сайдбар (см. NavMenu.razor.css), поэтому
+   контенту больше не нужен отступ снизу — вместо этого резервируем
+   место слева под сайдбар. На Android/iOS (узкий экран) поведение
+   не меняется — нижний бар остаётся как был. */
+@media (min-width: 900px) {
+    .app-content {
+        padding-bottom: 24px;
+        padding-left: 112px;
+    }
+}

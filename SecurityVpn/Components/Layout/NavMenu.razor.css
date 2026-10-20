@@ -1,0 +1,436 @@
+.nav-menu {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    padding: 0 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+}
+
+.nav-menu-glass {
+    position: relative;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    max-width: 420px;
+    padding: 8px;
+    border-radius: 26px;
+    background: var(--nav-bg, rgba(15, 23, 42, 0.72));
+    border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.08));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: var(--nav-shadow, 0 20px 50px rgba(2, 6, 23, 0.45), 0 2px 8px rgba(0, 0, 0, 0.2));
+    transition: background-color .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+/* Тёмная тема — тёмное "стекло", как было изначально: неактивные
+   иконки светло-серые, всё поверх полупрозрачного тёмно-синего фона. */
+[data-theme="dark"] .nav-menu-glass {
+    --nav-bg: rgba(15, 23, 42, 0.72);
+    --nav-border: rgba(255, 255, 255, 0.08);
+    --nav-shadow: 0 20px 50px rgba(2, 6, 23, 0.45), 0 2px 8px rgba(0, 0, 0, 0.2);
+    --nav-text: rgba(226, 232, 240, 0.55);
+    --nav-avatar-idle-bg: rgba(255, 255, 255, 0.15);
+    --nav-avatar-idle-border: rgba(255, 255, 255, 0.35);
+}
+
+/* Светлая тема — раньше тут был тот же тёмно-синий фон, просто чуть
+   более непрозрачный, поэтому бар резко "выпадал" на светлом фоне
+   приложения. Теперь бар белый, как карточки интерфейса, с обычной
+   рамкой/тенью — сливается со светлой темой, а не спорит с ней.
+   Неактивные иконки — тёмно-серые (иначе на белом фоне их не видно),
+   активная иконка/бейдж профиля по-прежнему белые — они всегда сидят
+   поверх синей "таблетки"-индикатора, а не на фоне бара. */
+[data-theme="light"] .nav-menu-glass {
+    --nav-bg: rgba(255, 255, 255, 0.94);
+    --nav-border: var(--border-color-soft, rgba(15, 23, 42, 0.08));
+    --nav-shadow: 0 20px 40px rgba(76, 29, 149, 0.16), 0 2px 8px rgba(15, 23, 42, 0.06);
+    --nav-text: var(--text-tertiary, #94a3b8);
+    --nav-avatar-idle-bg: rgba(124, 58, 237, 0.1);
+    --nav-avatar-idle-border: rgba(124, 58, 237, 0.25);
+}
+
+.nav-indicator {
+    position: absolute;
+    top: 8px;
+    bottom: 8px;
+    /* 5 равных табов внутри паддинга 8px с каждой стороны контейнера.
+       left/width считаются как доля от (100% - 16px). Раньше сдвиг
+       делался через translateX(idx * (100% + 4px)), где 100% — это
+       ширина самого индикатора, а +4px — "воображаемый" gap, которого
+       в разметке нет (у .nav-menu-glass нет gap). Из-за этого на
+       каждом шаге накапливалась ошибка, и подсветку уносило вправо
+       тем сильнее, чем правее таб. */
+    left: calc(8px + var(--idx, 0) * (100% - 16px) / 5 + 3px);
+    width: calc((100% - 16px) / 5 - 6px);
+    border-radius: 20px;
+    background: var(--btn-gradient);
+    box-shadow: 0 6px 18px rgba(124, 58, 237, .45);
+    transition: left .45s cubic-bezier(.22, 1, .36, 1), opacity .3s ease;
+    opacity: 1;
+}
+
+    .nav-indicator[hidden] {
+        opacity: 0;
+        display: block;
+    }
+
+.nav-item {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+    .nav-item ::deep .nav-link {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        padding: 10px 2px;
+        color: var(--nav-text, rgba(226, 232, 240, 0.55));
+        text-decoration: none;
+        transition: color .3s ease, transform .15s ease;
+    }
+
+        .nav-item ::deep .nav-link.active {
+            color: white;
+        }
+
+    .nav-item:active ::deep .nav-link {
+        transform: scale(0.92);
+    }
+
+.nav-icon svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.nav-label {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: .1px;
+    white-space: nowrap;
+}
+
+.nav-avatar-item {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 2px;
+    color: var(--nav-text, rgba(226, 232, 240, 0.55));
+    transition: color .3s ease, transform .15s ease;
+    touch-action: manipulation;
+}
+
+    .nav-avatar-item:active {
+        transform: scale(0.92);
+    }
+
+    .nav-avatar-item.active {
+        color: white;
+    }
+
+.nav-avatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 800;
+    background: var(--nav-avatar-idle-bg, rgba(255, 255, 255, 0.15));
+    color: var(--nav-text, white);
+    border: 1.5px solid var(--nav-avatar-idle-border, rgba(255, 255, 255, 0.35));
+    transition: background .3s ease, color .3s ease, border-color .3s ease;
+}
+
+.nav-avatar-item.active .nav-avatar {
+    background: white;
+    color: #6d28d9;
+    border-color: white;
+}
+
+/* Backdrop + dropdown */
+.nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.5);
+    backdrop-filter: blur(2px);
+    z-index: 1001;
+    animation: nav-fade-in .2s ease;
+}
+
+.nav-dropdown {
+    position: fixed;
+    left: 16px;
+    right: 16px;
+    bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    z-index: 1002;
+    max-width: 420px;
+    margin: 0 auto;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--dd-bg, rgba(15, 23, 42, 0.94));
+    border: 1px solid var(--dd-border, rgba(255, 255, 255, 0.1));
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: var(--dd-shadow, 0 24px 60px rgba(2, 6, 23, 0.55));
+    animation: nav-dropdown-in .28s cubic-bezier(.22, 1, .36, 1);
+}
+
+.nav-dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px;
+    background: var(--dd-header-bg, linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(139, 92, 246, 0.15)));
+}
+
+.nav-dropdown-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 15px;
+    color: white;
+    background: var(--btn-gradient);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.nav-dropdown-userinfo {
+    min-width: 0;
+}
+
+.nav-dropdown-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--dd-name, white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-dropdown-email {
+    font-size: 12px;
+    color: var(--dd-email, #c4b5fd);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nav-dropdown-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border: none;
+    background: none;
+    color: var(--dd-item-text, #e2e8f0);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background .2s ease;
+}
+
+    .nav-dropdown-item svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+        color: var(--dd-item-icon, #c4b5fd);
+    }
+
+    .nav-dropdown-item:hover {
+        background: var(--dd-item-hover, rgba(255, 255, 255, 0.06));
+    }
+
+    .nav-dropdown-item:active {
+        background: var(--dd-item-active, rgba(255, 255, 255, 0.1));
+    }
+
+    .nav-dropdown-item.danger {
+        color: var(--danger, #ff5757);
+    }
+
+        .nav-dropdown-item.danger svg {
+            color: var(--danger, #ff5757);
+        }
+
+.nav-dropdown-divider {
+    height: 1px;
+    background: var(--dd-divider, rgba(255, 255, 255, 0.08));
+    margin: 4px 0;
+}
+
+/* Тёмная тема — исходный вид дропдауна (тёмное стекло, светлый текст). */
+[data-theme="dark"] .nav-dropdown {
+    --dd-bg: rgba(15, 23, 42, 0.94);
+    --dd-border: rgba(255, 255, 255, 0.1);
+    --dd-shadow: 0 24px 60px rgba(2, 6, 23, 0.55);
+    --dd-header-bg: linear-gradient(135deg, rgba(124, 58, 237, 0.25), rgba(139, 92, 246, 0.15));
+    --dd-name: #fff;
+    --dd-email: #c4b5fd;
+    --dd-item-text: #e2e8f0;
+    --dd-item-icon: #c4b5fd;
+    --dd-item-hover: rgba(255, 255, 255, 0.06);
+    --dd-item-active: rgba(255, 255, 255, 0.1);
+    --dd-divider: rgba(255, 255, 255, 0.08);
+}
+
+/* Светлая тема — раньше дропдаун был захардкожен в тёмное стекло и
+   на светлой теме приложения всё равно оставался тёмным с чёрным(!)
+   текстом пунктов (color: #e2e8f0 читался почти как чёрный на тёмном
+   фоне, но сам фон не совпадал со светлым интерфейсом и выглядел
+   инородно). Теперь на светлой теме дропдаун — белая карточка в
+   стиле остального интерфейса: светлый фон, тёмный читаемый текст,
+   голубой акцент вместо белого на шапке. */
+[data-theme="light"] .nav-dropdown {
+    --dd-bg: rgba(255, 255, 255, 0.98);
+    --dd-border: var(--border-color-soft, rgba(15, 23, 42, 0.08));
+    --dd-shadow: 0 24px 50px rgba(76, 29, 149, 0.18), 0 2px 10px rgba(15, 23, 42, 0.08);
+    --dd-header-bg: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(139, 92, 246, 0.08));
+    --dd-name: var(--text-primary, #0a1628);
+    --dd-email: var(--accent, #7c3aed);
+    --dd-item-text: var(--text-primary, #0a1628);
+    --dd-item-icon: var(--accent, #7c3aed);
+    --dd-item-hover: var(--bg-hover, rgba(0, 0, 0, .04));
+    --dd-item-active: rgba(124, 58, 237, 0.1);
+    --dd-divider: var(--border-color-soft, rgba(15, 23, 42, 0.08));
+}
+
+@keyframes nav-fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes nav-dropdown-in {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ===== Android fix =====
+   Chromium WebView на Android очень дорого (и криво) обсчитывает
+   backdrop-filter: blur() для fixed-элемента поверх длинных скроллящихся
+   страниц — Profile в приложении самая длинная. Итог: на скруглённых углах
+   навбара остаётся паразитная обводка-хало от блюра, который не успевает
+   аккуратно обрезаться по border-radius, а во время/после скролла WebView
+   может на время терять тач-события у fixed nav-menu — выглядит как
+   "навбар завис, из профиля не выйти", хотя роутинг работает нормально.
+   На Android (класс .nav-flat, см. NavMenu.razor) полностью убираем blur
+   и переводим бар на отдельный GPU-слой, чтобы тапы не терялись. */
+.nav-menu-glass.nav-flat {
+    background: rgba(15, 23, 42, 0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+[data-theme="light"] .nav-menu-glass.nav-flat {
+    background: rgba(255, 255, 255, 0.98);
+}
+
+.nav-dropdown.nav-flat {
+    background: var(--dd-bg, rgba(15, 23, 42, 0.98));
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ===== Десктоп (ПК) — сайдбар слева =====
+   На Android/iOS (узкий экран) навбар остаётся нижним, как сейчас.
+   На широком экране (мышь+клавиатура, MAUI на Windows) тот же
+   компонент превращается в вертикальный сайдбар слева — без
+   переключения layout'ов, просто другая раскладка того же nav-menu.
+   .nav-menu уже position: fixed, поэтому он не участвует в flex-потоке
+   .app-shell — учитывать .app-content отступ достаточно (см.
+   MainLayout.razor.css). */
+@media (min-width: 900px) {
+    .nav-menu {
+        left: 0;
+        right: auto;
+        top: 0;
+        bottom: 0;
+        justify-content: flex-start;
+        padding: 24px 0 24px 16px;
+    }
+
+    .nav-menu-glass {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        width: 88px;
+        max-width: none;
+        height: 100%;
+        padding: 12px 8px;
+        border-radius: 24px;
+        gap: 4px;
+    }
+
+    /* Индикатор активного пункта переезжает из горизонтали в вертикаль:
+       вместо left/width теперь top/height по тем же 5 слотам. */
+    .nav-indicator {
+        top: calc(8px + var(--idx, 0) * (100% - 16px) / 5 + 3px);
+        left: 8px;
+        right: 8px;
+        bottom: auto;
+        width: auto;
+        height: calc((100% - 16px) / 5 - 6px);
+        transition: top .45s cubic-bezier(.22, 1, .36, 1), opacity .3s ease;
+    }
+
+    .nav-item {
+        flex: none;
+    }
+
+    .nav-item ::deep .nav-link {
+        padding: 12px 2px;
+    }
+
+    .nav-avatar-item {
+        padding: 12px 2px;
+    }
+
+    /* Дропдаун профиля открывается рядом с сайдбаром, а не по центру
+       снизу экрана. */
+    .nav-dropdown {
+        left: 104px;
+        right: auto;
+        bottom: 24px;
+        width: 280px;
+        max-width: 280px;
+        margin: 0;
+    }
+}

@@ -1,0 +1,315 @@
+@font-face {
+    font-family: 'TwemojiFlags';
+    src: url('fonts/Emoji-fonts.ttf') format('truetype');
+}
+
+/* Единый читаемый шрифт для англ. и рус. текста. Раньше * { font-family:
+   "TwemojiFlags" } применялся вообще ко всему тексту в приложении — это
+   шрифт с флагами-эмодзи, у него нет нормальных латинских/кириллических
+   глифов, поэтому браузер/WebView молча подставлял системный fallback,
+   и на разных ОС (и для en/ru по-разному) текст выглядел не одинаково.
+   TwemojiFlags оставлен только там, где он реально нужен — флаги стран
+   (см. .server-flag в ServerCard.razor.css) и лого (.logo). */
+:root {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+/* ===== Тема: переменные ===== */
+/* Светлая тема (по умолчанию, пока JS не применил data-theme) */
+:root,
+[data-theme="light"] {
+    --bg-app: #f8fafc;
+    --bg-page: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-alt: #f8fafc;
+    --bg-input: #f1f5f9;
+    --bg-input-focus: #ffffff;
+    --bg-elevated: #f5f3ff;
+    --bg-hover: rgba(0, 0, 0, .04);
+
+    --border-color: #ede9fe;
+    --border-color-soft: #e2e8f0;
+
+    --text-primary: #0a1628;
+    --text-secondary: #64748b;
+    --text-tertiary: #94a3b8;
+    --text-inverse: #ffffff;
+
+    --accent: #7c3aed;
+    --accent-dark: #6d28d9;
+    --accent-light: #c4b5fd;
+
+    --switch-off: #cbd5e1;
+
+    --shadow-color: rgba(76, 29, 149, .12);
+
+    --danger: #f43f5e;
+    --danger-bg: #fff1f2;
+    --danger-border: #fecdd3;
+
+    --success: #10b981;
+    --warning: #facc15;
+    --info: #a78bfa;
+
+    color-scheme: light;
+}
+
+/* Тёмная тема */
+[data-theme="dark"] {
+    --bg-app: #0b0716;
+    --bg-page: #130c26;
+    --bg-card: rgba(255, 255, 255, .05);
+    --bg-card-alt: rgba(255, 255, 255, .06);
+    --bg-input: rgba(255, 255, 255, .08);
+    --bg-input-focus: rgba(255, 255, 255, .12);
+    --bg-elevated: rgba(255, 255, 255, .08);
+    --bg-hover: rgba(255, 255, 255, .05);
+
+    --border-color: rgba(255, 255, 255, .08);
+    --border-color-soft: rgba(255, 255, 255, .1);
+
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-tertiary: #64748b;
+    --text-inverse: #0b0716;
+
+    --accent: #8b5cf6;
+    --accent-dark: #7c3aed;
+    --accent-light: #a78bfa;
+
+    --switch-off: rgba(255, 255, 255, .15);
+
+    --shadow-color: rgba(0, 0, 0, .45);
+
+    --danger: #ff5757;
+    --danger-bg: rgba(255, 87, 87, .1);
+    --danger-border: rgba(255, 87, 87, .3);
+
+    --success: #4ade80;
+    --warning: #facc15;
+    --info: #a78bfa;
+
+    color-scheme: dark;
+}
+
+* {
+    font-family: var(--font-sans);
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body, #app {
+    height: 100%;
+    margin: 0;
+}
+
+html {
+    background: var(--bg-app);
+    overflow-x: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background: var(--bg-app);
+    color: var(--text-primary);
+    transition: background-color .25s ease, color .25s ease;
+}
+
+/* Убираем видимый скроллбар (десктоп-WebView его рисует как узкую
+   полосу справа поверх контента) везде, где что-то скроллится —
+   сам скролл при этом продолжает работать как обычно. */
+* {
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* старый Edge/IE */
+}
+
+*::-webkit-scrollbar {
+    display: none;               /* Chromium (WebView2/Android/iOS) */
+    width: 0;
+    height: 0;
+}
+
+#app {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+ul {
+    list-style: none;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Blazor's <FocusOnNavigate Selector="h1" /> programmatically focuses
+   the page's h1 on every navigation for screen-reader accessibility.
+   That's correct behaviour — we just don't want the browser's default
+   focus ring to be visible around it. */
+h1 {
+    outline: none;
+}
+
+/* Used by Logo.razor (no scoped css of its own) */
+.logo {
+    font-size: 30px;
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif !important;
+}
+
+    .logo .va {
+        color: white;
+    }
+
+    .logo .pn {
+        color: #c4b5fd;
+    }
+
+
+/* ===================================================================
+   Security VPN: фиолетовая гамма, планета, плавные анимации
+   =================================================================== */
+
+:root,
+[data-theme="light"] {
+    --hero-gradient: linear-gradient(170deg, #2e1065 0%, #5b21b6 55%, #7c3aed 100%);
+    --btn-gradient: linear-gradient(135deg, #7c3aed, #6d28d9);
+    --ease-out: cubic-bezier(.22, 1, .36, 1);
+    --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+[data-theme="dark"] {
+    --hero-gradient: linear-gradient(170deg, #12072b 0%, #2e1065 55%, #4c1d95 100%);
+}
+
+/* --- Загрузочный экран (пока поднимается Blazor) --- */
+.boot {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    background: #0b0716;
+}
+
+    .boot img {
+        height: 84px;
+        width: auto;
+        animation: boot-pulse 1.8s ease-in-out infinite;
+    }
+
+.boot-bar {
+    width: 120px;
+    height: 3px;
+    border-radius: 3px;
+    background: rgba(255, 255, 255, .1);
+    overflow: hidden;
+}
+
+    .boot-bar span {
+        display: block;
+        height: 100%;
+        width: 40%;
+        border-radius: 3px;
+        background: linear-gradient(90deg, #7c3aed, #c4b5fd);
+        animation: boot-slide 1.2s ease-in-out infinite;
+    }
+
+@keyframes boot-pulse {
+    0%, 100% { transform: scale(1); opacity: .85; }
+    50% { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes boot-slide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(300%); }
+}
+
+/* --- Логотип --- */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .logo img {
+        filter: drop-shadow(0 6px 18px rgba(124, 58, 237, .45));
+    }
+
+.logo-text {
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: .3px;
+    color: white;
+}
+
+    .logo-text b {
+        color: #c4b5fd;
+        font-weight: 800;
+    }
+
+/* --- Планета (canvas рисуется planet.js) --- */
+.planet-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* --- Переходы между страницами и появление элементов --- */
+@keyframes page-in {
+    from { opacity: 0; transform: translateY(14px) scale(.985); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes reveal {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes pop-in {
+    from { opacity: 0; transform: scale(.92); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-7px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(3px); }
+}
+
+.app-content > * {
+    animation: page-in .5s var(--ease-out) backwards;
+}
+
+/* Каскадное появление: style="--i:N" задаёт порядок */
+.reveal {
+    animation: reveal .55s var(--ease-out) backwards;
+    animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+
+/* Плавные цифры без «прыжков» ширины */
+.tnum {
+    font-variant-numeric: tabular-nums;
+}
+
+button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}

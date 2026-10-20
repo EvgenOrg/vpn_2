@@ -1,0 +1,66 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@using VPN.Services
+@inject ThemeService ThemeSvc
+@inject IJSRuntime JS
+
+<div class="page">
+    <main class="auth-page">
+        @Body
+    </main>
+
+    
+</div>
+
+@code {
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<NewLayout>? _selfRef;
+
+    protected override void OnInitialized()
+    {
+        ThemeSvc.OnChange += HandleThemeChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/theme.js");
+            await ApplyThemeAsync();
+
+            _selfRef = DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync("watchSystemTheme", _selfRef);
+        }
+    }
+
+    private async void HandleThemeChanged()
+    {
+        await ApplyThemeAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ApplyThemeAsync()
+    {
+        if (_module is null) return;
+        await _module.InvokeVoidAsync("applyTheme", ThemeSvc.CurrentThemeValue);
+    }
+
+    [JSInvokable]
+    public async Task OnSystemThemeChanged(string effective)
+    {
+        if (ThemeSvc.CurrentTheme == AppTheme.System)
+        {
+            await ApplyThemeAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        ThemeSvc.OnChange -= HandleThemeChanged;
+        _selfRef?.Dispose();
+        if (_module is not null)
+        {
+            _ = _module.DisposeAsync();
+        }
+    }
+}

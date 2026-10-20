@@ -1,0 +1,15 @@
+<div class="logo">
+    <img src="logo.png" alt="Security VPN" style="height: @(Height)px; width: auto;" />
+    @if (ShowText)
+    {
+        <span class="logo-text">Security<b>VPN</b></span>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int Height { get; set; } = 75;
+
+    [Parameter]
+    public bool ShowText { get; set; }
+}

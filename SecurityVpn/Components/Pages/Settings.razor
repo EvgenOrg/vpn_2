@@ -1,0 +1,253 @@
+@page "/settings"
+@implements IDisposable
+@using VPN.Services
+@inject AuthService AuthService
+@inject ThemeService ThemeSvc
+@inject VpnSettingsService SettingsSvc
+@inject LocalizationService Loc
+@inject NavigationManager Nav
+
+<div class="settings-page">
+
+    <header class="settings-hero">
+        <div class="settings-hero-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </div>
+        <h2>@Loc.T("settings.title")</h2>
+        <p>@Loc.T("settings.subtitle")</p>
+    </header>
+
+    <div class="settings-body">
+
+        <div class="settings-section">
+            <span class="settings-section-title">@Loc.T("settings.section.network")</span>
+            <div class="settings-card">
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-blue">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.protocol.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.protocol.sub")</div>
+                    </div>
+                    <select class="settings-select" value="@SettingsSvc.Protocol" @onchange="OnProtocolChanged">
+                        <option value="vless">VLESS · Reality</option>
+                    </select>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-purple">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.dns.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.dns.sub")</div>
+                    </div>
+                    <input class="settings-input" value="@SettingsSvc.DnsServer" @oninput="OnDnsChanged" placeholder="1.1.1.1" />
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-orange">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.split.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.split.sub")</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked="@SettingsSvc.SplitTunneling" @onchange="() => SettingsSvc.SetSplitTunneling(!SettingsSvc.SplitTunneling)" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <span class="settings-section-title">@Loc.T("settings.section.security")</span>
+            <div class="settings-card">
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-red">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.killswitch.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.killswitch.sub")</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked="@SettingsSvc.KillSwitch" @onchange="() => SettingsSvc.SetKillSwitch(!SettingsSvc.KillSwitch)" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-green">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.autoconnect.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.autoconnect.sub")</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked="@SettingsSvc.AutoConnect" @onchange="() => SettingsSvc.SetAutoConnect(!SettingsSvc.AutoConnect)" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-blue">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.blockads.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.blockads.sub")</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked="@SettingsSvc.BlockAds" @onchange="() => SettingsSvc.SetBlockAds(!SettingsSvc.BlockAds)" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <span class="settings-section-title">@Loc.T("settings.section.appearance")</span>
+            <div class="settings-card">
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-orange">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.theme.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.theme.sub")</div>
+                    </div>
+                    <select class="settings-select" value="@ThemeSvc.CurrentThemeValue" @onchange="OnThemeChanged">
+                        <option value="system">@Loc.T("settings.theme.system")</option>
+                        <option value="dark">@Loc.T("settings.theme.dark")</option>
+                        <option value="light">@Loc.T("settings.theme.light")</option>
+                    </select>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-icon icon-purple">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                    </div>
+                    <div class="settings-row-text">
+                        <div class="settings-label">@Loc.T("settings.language.label")</div>
+                        <div class="settings-sub">@Loc.T("settings.language.sub")</div>
+                    </div>
+                    <select class="settings-select" value="@Loc.CurrentLanguageValue" @onchange="OnLanguageChanged">
+                        <option value="ru">@Loc.T("settings.language.ru")</option>
+                        <option value="en">@Loc.T("settings.language.en")</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <span class="settings-section-title">@Loc.T("settings.section.app")</span>
+            <div class="settings-card">
+                <button type="button" class="settings-action" @onclick="ClearCache">
+                    <div class="settings-row-icon icon-blue">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    </div>
+                    <span class="settings-action-label">@Loc.T("settings.clearCache.label")</span>
+                    <span class="settings-action-hint">@CacheHint</span>
+                </button>
+                <button type="button" class="settings-action" @onclick="CheckUpdates">
+                    <div class="settings-row-icon icon-green">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    </div>
+                    <span class="settings-action-label">@Loc.T("settings.checkUpdates.label")</span>
+                    <span class="settings-action-hint">@UpdateHint</span>
+                </button>
+            </div>
+        </div>
+
+        <button type="button" class="settings-logout" @onclick="DoLogout">@Loc.T("settings.logout")</button>
+    </div>
+</div>
+
+@code {
+    private enum CacheState { Initial, JustCleared, Empty }
+    private enum UpdateState { Idle, Checking, UpToDate }
+
+    private CacheState cacheState = CacheState.Initial;
+    private UpdateState updateState = UpdateState.Idle;
+
+    private string CacheHint => cacheState switch
+    {
+        CacheState.JustCleared => Loc.T("settings.cache.cleared"),
+        CacheState.Empty => Loc.T("settings.cache.zero"),
+        _ => Loc.T("settings.cache.initial"),
+    };
+
+    private string UpdateHint => updateState switch
+    {
+        UpdateState.Checking => Loc.T("settings.update.checking"),
+        UpdateState.UpToDate => Loc.T("settings.update.latest"),
+        _ => Loc.T("settings.update.initial"),
+    };
+
+    protected override void OnInitialized()
+    {
+        Loc.OnChange += HandleLanguageChanged;
+        SettingsSvc.OnChange += HandleSettingsChanged;
+    }
+
+    private void HandleLanguageChanged() => InvokeAsync(StateHasChanged);
+    private void HandleSettingsChanged() => InvokeAsync(StateHasChanged);
+
+    private void OnProtocolChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "vless";
+        SettingsSvc.SetProtocol(value);
+    }
+
+    private void OnDnsChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "";
+        SettingsSvc.SetDnsServer(value);
+    }
+
+    private void OnThemeChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "system";
+        ThemeSvc.SetTheme(value);
+    }
+
+    private void OnLanguageChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString() ?? "ru";
+        Loc.SetLanguage(value);
+    }
+
+    private async Task ClearCache()
+    {
+        cacheState = CacheState.JustCleared;
+        StateHasChanged();
+        await Task.Delay(1500);
+        cacheState = CacheState.Empty;
+        StateHasChanged();
+    }
+
+    private async Task CheckUpdates()
+    {
+        updateState = UpdateState.Checking;
+        StateHasChanged();
+        await Task.Delay(1200);
+        updateState = UpdateState.UpToDate;
+        StateHasChanged();
+    }
+
+    private void DoLogout()
+    {
+        AuthService.Logout();
+        Nav.NavigateTo("/login");
+    }
+
+    public void Dispose()
+    {
+        Loc.OnChange -= HandleLanguageChanged;
+        SettingsSvc.OnChange -= HandleSettingsChanged;
+    }
+}

@@ -1,0 +1,91 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@using VPN.Services
+@inject ThemeService ThemeSvc
+@inject AuthService AuthSvc
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+@if (AuthSvc.IsAuthenticated)
+{
+    <div class="app-shell">
+        <main class="app-content">
+            @Body
+        </main>
+
+        <NavMenu />
+    </div>
+}
+
+@code {
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<MainLayout>? _selfRef;
+
+    protected override void OnInitialized()
+    {
+        ThemeSvc.OnChange += HandleThemeChanged;
+        AuthSvc.OnChange += HandleAuthChanged;
+
+        // Неавторизованный пользователь не должен видеть защищённые страницы —
+        // отправляем его на экран входа сразу при заходе в любую страницу
+        // под этим layout (Home, Servers, Profile, Settings, Support, NotFound).
+        if (!AuthSvc.IsAuthenticated)
+        {
+            Nav.NavigateTo("/login");
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AuthSvc.IsAuthenticated)
+        {
+            _module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/theme.js");
+            await ApplyThemeAsync();
+
+            _selfRef = DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync("watchSystemTheme", _selfRef);
+        }
+    }
+
+    private async void HandleThemeChanged()
+    {
+        await ApplyThemeAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleAuthChanged()
+    {
+        if (!AuthSvc.IsAuthenticated)
+        {
+            Nav.NavigateTo("/login");
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ApplyThemeAsync()
+    {
+        if (_module is null) return;
+        await _module.InvokeVoidAsync("applyTheme", ThemeSvc.CurrentThemeValue);
+    }
+
+    [JSInvokable]
+    public async Task OnSystemThemeChanged(string effective)
+    {
+        // Перерисовываем только если пользователь выбрал "Системную" тему
+        if (ThemeSvc.CurrentTheme == AppTheme.System)
+        {
+            await ApplyThemeAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        ThemeSvc.OnChange -= HandleThemeChanged;
+        AuthSvc.OnChange -= HandleAuthChanged;
+        _selfRef?.Dispose();
+        if (_module is not null)
+        {
+            _ = _module.DisposeAsync();
+        }
+    }
+}

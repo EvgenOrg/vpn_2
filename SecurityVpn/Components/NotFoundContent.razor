@@ -1,0 +1,15 @@
+@using VPN.Services
+@inject NavigationManager Nav
+@inject LocalizationService Loc
+
+<div class="notfound-page">
+    <div class="notfound-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M9 15l1.8-4.8L15.5 8.5 13.7 13.3z"></path>
+        </svg>
+    </div>
+    <h1>@Loc.T("notfound.title")</h1>
+    <p>@Loc.T("notfound.subtitle")</p>
+    <button type="button" class="notfound-btn" @onclick='() => Nav.NavigateTo("/")'>@Loc.T("notfound.button")</button>
+</div>

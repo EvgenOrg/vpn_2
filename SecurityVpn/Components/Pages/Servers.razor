@@ -1,0 +1,139 @@
+@page "/servers"
+@implements IDisposable
+@inject NodeStorage ns
+@inject LocalizationService Loc
+
+<div class="servers-page">
+
+    <header class="main-header">
+        <div class="server-container">
+            <div class="server-header">
+                <h2>@Loc.T("servers.title")</h2>
+                <p>@nodes.Count @LocationsWord · @Loc.T("servers.subtitle")</p>
+            </div>
+
+            <div class="search-row">
+                <div class="search-wrapper">
+                    <span class="search-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text"
+                           placeholder="@Loc.T("servers.searchPlaceholder")"
+                           @bind="filterText"
+                           @bind:event="oninput">
+                </div>
+
+                <button type="button" class="add-btn" @onclick="OpenSheet" aria-label="@Loc.T("servers.add.title")">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="server-container filter-row">
+        <div class="filter-tags">
+            <button class="tag @(activeFilter == "all" ? "active" : "")" @onclick='() => SetFilter("all")'>@Loc.T("servers.filter.all")</button>
+            <button class="tag @(activeFilter == "online" ? "active" : "")" @onclick='() => SetFilter("online")'>@Loc.T("servers.filter.online")</button>
+        </div>
+    </div>
+
+    <div class="servers-list">
+        @if (!ns.Custom.Any() && string.IsNullOrWhiteSpace(filterText))
+        {
+            <button type="button" class="add-hint reveal" style="--i:0" @onclick="OpenSheet">
+                <span class="add-hint-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="8" rx="2"></rect><rect x="2" y="13" width="20" height="8" rx="2"></rect><line x1="6" y1="7" x2="6.01" y2="7"></line><line x1="6" y1="17" x2="6.01" y2="17"></line></svg>
+                </span>
+                <span class="add-hint-text">
+                    <strong>@Loc.T("servers.addHint.title")</strong>
+                    <span>@Loc.T("servers.addHint.subtitle")</span>
+                </span>
+            </button>
+        }
+
+        @if (!FilteredItems.Any())
+        {
+            <div class="servers-empty">
+                <span class="servers-empty-icon">
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </span>
+                <p>@Loc.T("servers.empty.title")</p>
+                <span>@Loc.T("servers.empty.subtitle")</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var (node, i) in FilteredItems.Select((n, i) => (n, i)))
+            {
+                <ServerCard @key="node.Id" node="@node" red="/" Index="@(i + 1)" OnDelete="DeleteNode" />
+            }
+        }
+    </div>
+</div>
+
+@if (sheetOpen)
+{
+    <AddServerSheet OnClose="CloseSheet" />
+}
+
+@code {
+    private string filterText = "";
+    private string activeFilter = "all";
+    private bool sheetOpen;
+
+    private List<Node> nodes => ns.All.ToList();
+
+    private string LocationsWord => Loc.T(nodes.Count == 1 ? "servers.location.one" : "servers.location.many");
+
+    private IEnumerable<Node> FilteredItems
+    {
+        get
+        {
+            IEnumerable<Node> items = nodes;
+
+            if (!string.IsNullOrWhiteSpace(filterText))
+            {
+                items = items.Where(item =>
+                    item.Name.Contains(filterText, StringComparison.OrdinalIgnoreCase) ||
+                    item.Country.Contains(filterText, StringComparison.OrdinalIgnoreCase) ||
+                    CountryNames.GetName(item.Country, Loc.CurrentLanguage).Contains(filterText, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (activeFilter == "online")
+            {
+                items = items.Where(item => item.IsOnline);
+            }
+
+            // онлайн выше, свои серверы выше демо
+            return items
+                .OrderByDescending(item => item.IsOnline)
+                .ThenBy(item => item.IsDemo)
+                .ThenBy(item => item.Name);
+        }
+    }
+
+    private void SetFilter(string filter) => activeFilter = filter;
+
+    private void OpenSheet() => sheetOpen = true;
+
+    private void CloseSheet() => sheetOpen = false;
+
+    private void DeleteNode(Node node) => ns.Remove(node.Id);
+
+    protected override void OnInitialized()
+    {
+        Loc.OnChange += HandleChanged;
+        ns.OnChange += HandleChanged;
+
+        // проверяем доступность своих серверов; список уже показан, статусы обновляются на лету
+        _ = ns.RefreshStatusAsync();
+    }
+
+    private void HandleChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Loc.OnChange -= HandleChanged;
+        ns.OnChange -= HandleChanged;
+    }
+}

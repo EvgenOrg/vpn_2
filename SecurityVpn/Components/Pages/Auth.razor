@@ -1,0 +1,106 @@
+@page "/login"
+@implements IDisposable
+@inject NavigationManager Nav
+@inject AuthService AuthService
+@inject LocalizationService Loc
+@layout NewLayout
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-planet"><Planet State="idle" /></div>
+
+            <Logo Height="60" ShowText="true" />
+            <p class="auth-tagline">@Loc.T("auth.tagline")</p>
+
+            <div class="auth-toggle">
+                <div class="auth-toggle-slider @(isLogin ? "" : " is-right")"></div>
+                <button type="button" class="auth-toggle-btn @(isLogin ? " active" : "")"
+                        @onclick="() => SwitchMode(true)">
+                    @Loc.T("auth.tab.login")
+                </button>
+                <button type="button" class="auth-toggle-btn @(!isLogin ? " active" : "")"
+                        @onclick="() => SwitchMode(false)">
+                    @Loc.T("auth.tab.register")
+                </button>
+            </div>
+        </div>
+
+        <div class="auth-body">
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="auth-error" @key="errorTick">@errorMessage</div>
+            }
+
+                <div class="auth-form-wrap">
+                @if (isLogin)
+                {
+                    <LoginForm ErrorMessage="HandleError" />
+                }
+                else
+                {
+                    <RegisterForm ErrorMessage="HandleError" />
+                }
+               
+                    
+            
+            </div>
+
+            <div class="auth-footer">
+                @if (isLogin)
+                {
+                    <span>
+                        @Loc.T("auth.footer.noAccount") <a href="javascript:void(0)"
+                                         @onclick="() => SwitchMode(false)">@Loc.T("auth.footer.register")</a>
+                    </span>
+                }
+                else
+                {
+                    <span>
+                        @Loc.T("auth.footer.hasAccount") <a href="javascript:void(0)"
+                                                 @onclick="() => SwitchMode(true)">@Loc.T("auth.footer.login")</a>
+                    </span>
+                }
+            </div>
+
+            <div class="auth-lang-switch">
+                <button type="button" class="auth-lang-btn @(Loc.CurrentLanguage == AppLanguage.Ru ? "active" : "")" @onclick='() => Loc.SetLanguage("ru")'>RU</button>
+                <span class="auth-lang-sep">·</span>
+                <button type="button" class="auth-lang-btn @(Loc.CurrentLanguage == AppLanguage.En ? "active" : "")" @onclick='() => Loc.SetLanguage("en")'>EN</button>
+            </div>
+        </div>
+    </div>
+
+
+@code {
+    private bool isLogin = true;
+    private string? errorMessage;
+    private int errorTick;
+
+    protected override void OnInitialized()
+    {
+        Loc.OnChange += HandleLanguageChanged;
+
+        // уже вошли — на форму входа делать нечего
+        if (AuthService.IsAuthenticated)
+            Nav.NavigateTo("/");
+    }
+
+    private void HandleLanguageChanged() => InvokeAsync(StateHasChanged);
+
+    private async Task HandleError(string message)
+    {
+        errorMessage = message;
+        if (!string.IsNullOrEmpty(message)) errorTick++;
+        StateHasChanged();
+    }
+
+    private void SwitchMode(bool login)
+    {
+        isLogin = login;
+        errorMessage = null;
+    }
+
+    public void Dispose()
+    {
+        Loc.OnChange -= HandleLanguageChanged;
+    }
+}

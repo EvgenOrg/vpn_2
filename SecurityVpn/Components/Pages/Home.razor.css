@@ -1,0 +1,565 @@
+/* height: 100% (не min-height: 100vh) — страница занимает ровно
+   доступную высоту .app-content и не создаёт лишний скролл,
+   flex-column ниже распределяет hero/content, чтобы всё уместилось
+   на одном экране без прокрутки. */
+.home-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-app);
+}
+
+/* ===== Hero ===== */
+
+.home-hero {
+    position: relative;
+    padding: clamp(12px, 3vh, 20px) 24px clamp(24px, 7vh, 56px);
+    background: var(--hero-gradient);
+    border-bottom-left-radius: 32px;
+    border-bottom-right-radius: 32px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+    .home-hero::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(196, 181, 253, .25) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+.hero-topbar {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.conn-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .1);
+    border: 1px solid rgba(255, 255, 255, .2);
+    color: #ddd6fe;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.conn-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.hero-orb {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(120px, 20vh, 176px);
+    height: clamp(120px, 20vh, 176px);
+    margin: clamp(14px, 4vh, 36px) auto 0;
+}
+
+.hero-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .18);
+}
+
+    .hero-ring.ring-inner {
+        inset: clamp(14px, 2.4vh, 22px);
+    }
+
+    .hero-ring.is-active {
+        border-color: rgba(167, 139, 250, .55);
+        animation: hero-pulse 2.6s ease-out infinite;
+    }
+
+    .hero-ring.ring-inner.is-active {
+        animation-delay: .5s;
+    }
+
+@keyframes hero-pulse {
+    0% {
+        transform: scale(.85);
+        opacity: .9;
+    }
+
+    80% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1.3);
+        opacity: 0;
+    }
+}
+
+.power-button {
+    position: relative;
+    width: clamp(70px, 11vh, 96px);
+    height: clamp(70px, 11vh, 96px);
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, .3);
+    background-color: var(--bg-page);
+    background-image: url("power-off-solid-full.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 36%;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .2);
+    transition: background-color .4s ease,
+                background-image 0s,
+                border-color .4s ease,
+                box-shadow .4s ease,
+                transform .15s ease;
+}
+
+    .power-button.btnNot-Active:hover {
+        border-color: #c4b5fd;
+        transform: scale(1.05);
+    }
+
+    .power-button.btn-loading {
+        border-color: rgba(255, 255, 255, .3);
+        border-top-color: #c4b5fd;
+        animation: vpn-spin 1s linear infinite;
+        pointer-events: none;
+    }
+
+    /* Активное (подключено) состояние.
+       Раньше это была плоская сплошная заливка #6d28d9 — воспринималась
+       как "просто синее пятно". Теперь: направленный свет сверху-слева
+       (radial-gradient), объёмный градиент по кругу, внутренние блик/тень
+       для эффекта выпуклой кнопки и мягкое двойное свечение снаружи
+       вместо жёсткой плашки. Плюс лёгкий pop-эффект в момент подключения. */
+    .power-button.btnActive {
+        border-color: rgba(255, 255, 255, .55);
+        background-color: #6d28d9;
+        background-image:
+            radial-gradient(circle at 35% 25%, rgba(255, 255, 255, .28), transparent 55%),
+            linear-gradient(160deg, #8b5cf6 0%, #6d28d9 60%, #2e1065 100%),
+            url("power-off-solid-white.svg");
+        background-repeat: no-repeat, no-repeat, no-repeat;
+        background-position: center, center, center;
+        background-size: 100% 100%, 100% 100%, 36%;
+        box-shadow:
+            0 0 0 6px rgba(124, 58, 237, .15),
+            0 0 34px rgba(124, 58, 237, .6),
+            inset 0 2px 6px rgba(255, 255, 255, .25),
+            inset 0 -6px 14px rgba(0, 0, 0, .25);
+        animation: power-btn-activate .35s cubic-bezier(.34, 1.56, .64, 1);
+    }
+
+    .power-button:active {
+        transform: scale(.95);
+    }
+
+    .power-button:disabled {
+        opacity: .5;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+
+        .power-button:disabled:hover {
+            transform: none;
+            border-color: rgba(255, 255, 255, .3);
+        }
+
+        .power-button:disabled:active {
+            transform: none;
+        }
+
+@keyframes vpn-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes power-btn-activate {
+    0% {
+        transform: scale(.9);
+    }
+
+    60% {
+        transform: scale(1.06);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.hero-text {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    margin-top: clamp(10px, 2.6vh, 22px);
+    color: white;
+}
+
+    .hero-text h1 {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .hero-text p {
+        margin: 6px 0 0;
+        font-size: 13px;
+        color: #ddd6fe;
+    }
+
+/* ===== Content ===== */
+.home-content {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: clamp(14px, 3vh, 28px) 20px clamp(12px, 2vh, 20px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1.2vh, 10px);
+    flex: 1;
+    min-height: 0;
+}
+
+.section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    padding-left: 4px;
+    margin-top: clamp(8px, 1.8vh, 14px);
+}
+
+    .section-label:first-child {
+        margin-top: 0;
+    }
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: clamp(10px, 2vh, 18px) 8px;
+    text-align: center;
+    border-radius: 18px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+}
+
+.stat-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stat-icon-blue {
+    background: rgba(139, 92, 246, .12);
+    color: #8b5cf6;
+}
+
+.stat-icon-purple {
+    background: rgba(139, 92, 246, .12);
+    color: #8b5cf6;
+}
+
+.stat-icon-green {
+    background: rgba(16, 185, 129, .12);
+    color: #10b981;
+}
+
+.stat-card span {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.stat-card small {
+    font-size: 10px;
+    color: var(--text-tertiary);
+}
+
+.no-server-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 20px;
+    background: var(--bg-card);
+    border: 1px dashed var(--border-color);
+    text-decoration: none;
+    color: var(--text-tertiary);
+    transition: transform .2s ease, border-color .2s ease;
+}
+
+    .no-server-card:hover {
+        transform: translateY(-2px);
+        border-color: var(--accent-light);
+    }
+
+.no-server-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+    background: var(--bg-card-alt);
+    border: 1px solid var(--border-color-soft);
+}
+
+.no-server-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+    .no-server-text strong {
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .no-server-text span {
+        font-size: 12px;
+        color: var(--text-tertiary);
+    }
+
+.promo-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: clamp(8px, 1.6vh, 14px);
+    padding: clamp(12px, 2.4vh, 18px) 18px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, .16), rgba(139, 92, 246, .12));
+    border: 1px solid var(--border-color);
+    text-decoration: none;
+    transition: transform .2s ease;
+}
+
+    .promo-card:hover {
+        transform: translateY(-2px);
+    }
+
+.promo-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+    .promo-text strong {
+        font-size: 14px;
+        color: var(--text-primary);
+    }
+
+    .promo-text span {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+.promo-btn {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: var(--btn-gradient);
+    color: white;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ===================================================================
+   Security VPN: звёзды, планета за кнопкой, состояния и анимации
+   =================================================================== */
+
+.hero-stars {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(1.4px 1.4px at 8% 18%, rgba(255, 255, 255, .85), transparent 60%),
+        radial-gradient(1px 1px at 22% 62%, rgba(255, 255, 255, .6), transparent 60%),
+        radial-gradient(1.6px 1.6px at 36% 28%, rgba(221, 214, 254, .9), transparent 60%),
+        radial-gradient(1px 1px at 52% 12%, rgba(255, 255, 255, .7), transparent 60%),
+        radial-gradient(1.3px 1.3px at 67% 70%, rgba(255, 255, 255, .65), transparent 60%),
+        radial-gradient(1px 1px at 78% 24%, rgba(255, 255, 255, .8), transparent 60%),
+        radial-gradient(1.6px 1.6px at 90% 56%, rgba(221, 214, 254, .85), transparent 60%),
+        radial-gradient(1px 1px at 14% 86%, rgba(255, 255, 255, .55), transparent 60%),
+        radial-gradient(1.2px 1.2px at 44% 90%, rgba(255, 255, 255, .6), transparent 60%),
+        radial-gradient(1px 1px at 94% 88%, rgba(255, 255, 255, .6), transparent 60%);
+    animation: twinkle 4.5s ease-in-out infinite alternate;
+}
+
+@keyframes twinkle {
+    from { opacity: .4; }
+    to { opacity: 1; }
+}
+
+/* Планета ровно по центру кнопки питания: canvas в ~3.4 раза больше кнопки,
+   сама планета — примерно вдвое больше неё (см. planet.js), остальное — свечение */
+.hero-planet {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 340%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: planet-in 1.2s var(--ease-out) backwards;
+}
+
+@keyframes planet-in {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(.82); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+.hero-topbar {
+    animation: topbar-in .6s var(--ease-out) backwards;
+}
+
+@keyframes topbar-in {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: none; }
+}
+
+.conn-badge {
+    transition: background-color .5s ease, border-color .5s ease, color .5s ease;
+}
+
+    .conn-badge.is-protected {
+        color: #bbf7d0;
+        background: rgba(74, 222, 128, .14);
+        border-color: rgba(74, 222, 128, .45);
+    }
+
+    .conn-badge.is-connecting {
+        color: #fef08a;
+        border-color: rgba(250, 204, 21, .45);
+    }
+
+.conn-dot {
+    transition: background-color .4s ease, box-shadow .4s ease;
+}
+
+.is-protected .conn-dot {
+    animation: dot-pulse 1.8s ease-in-out infinite;
+}
+
+.is-connecting .conn-dot {
+    animation: dot-blink .8s ease-in-out infinite;
+}
+
+@keyframes dot-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.5); }
+}
+
+@keyframes dot-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .3; }
+}
+
+.hero-text h1 {
+    animation: title-in .5s var(--ease-out) backwards;
+    text-shadow: 0 2px 16px rgba(12, 5, 36, .75);
+}
+
+.hero-text p {
+    text-shadow: 0 2px 12px rgba(12, 5, 36, .75);
+}
+
+@keyframes title-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+}
+
+.hero-error {
+    max-width: 440px;
+    margin: 12px auto 0;
+    padding: 9px 14px;
+    border-radius: 12px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #fecaca;
+    background: rgba(255, 87, 87, .16);
+    border: 1px solid rgba(255, 87, 87, .38);
+    animation: shake .45s ease;
+}
+
+/* Кнопка: мягкое «дыхание» свечения во включённом состоянии и подсветка при подключении */
+.power-button.btnActive {
+    animation: power-btn-activate .35s cubic-bezier(.34, 1.56, .64, 1), power-breathe 3.2s ease-in-out .4s infinite;
+}
+
+.power-button.btn-loading {
+    box-shadow: 0 0 36px rgba(167, 139, 250, .5);
+}
+
+@keyframes power-breathe {
+    0%, 100% {
+        box-shadow: 0 0 0 6px rgba(124, 58, 237, .15), 0 0 34px rgba(124, 58, 237, .6),
+                    inset 0 2px 6px rgba(255, 255, 255, .25), inset 0 -6px 14px rgba(0, 0, 0, .25);
+    }
+    50% {
+        box-shadow: 0 0 0 12px rgba(124, 58, 237, .08), 0 0 56px rgba(139, 92, 246, .85),
+                    inset 0 2px 6px rgba(255, 255, 255, .25), inset 0 -6px 14px rgba(0, 0, 0, .25);
+    }
+}
+
+.stat-card {
+    transition: transform .25s var(--ease-out), border-color .25s ease;
+}
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--accent-light);
+    }
+
+.chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: clamp(2px, .8vh, 8px);
+}
+
+.chip {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    color: var(--text-secondary);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+}

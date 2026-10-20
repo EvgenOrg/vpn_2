@@ -1,0 +1,57 @@
+@page "/subscription"
+@implements IDisposable
+@inject LocalizationService Loc
+
+<div class="sub-page">
+
+    <header class="sub-hero">
+        <div class="sub-hero-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7z"></path></svg>
+        </div>
+        <h2>@Loc.T("subscribe.title")</h2>
+        <p>@Loc.T("subscribe.subtitle")</p>
+    </header>
+
+    <div class="sub-body">
+
+        <div class="plan-card is-current reveal" style="--i:0">
+            <div class="plan-top">
+                <div>
+                    <div class="plan-name">@Loc.T("subscribe.plan.free")</div>
+                    <div class="plan-desc">@Loc.T("subscribe.plan.free.desc")</div>
+                </div>
+                <span class="plan-badge">@Loc.T("subscribe.current")</span>
+            </div>
+            <ul class="plan-features">
+                <li>@Loc.T("subscribe.plan.free.f1")</li>
+                <li>@Loc.T("subscribe.plan.free.f2")</li>
+                <li>@Loc.T("subscribe.plan.free.f3")</li>
+            </ul>
+        </div>
+
+        <div class="plan-card is-pro reveal" style="--i:1">
+            <div class="plan-top">
+                <div>
+                    <div class="plan-name">@Loc.T("subscribe.plan.pro")</div>
+                    <div class="plan-desc">@Loc.T("subscribe.plan.pro.desc")</div>
+                </div>
+                <span class="plan-badge plan-badge-soon">@Loc.T("subscribe.soon")</span>
+            </div>
+            <ul class="plan-features">
+                <li>@Loc.T("subscribe.plan.pro.f1")</li>
+                <li>@Loc.T("subscribe.plan.pro.f2")</li>
+                <li>@Loc.T("subscribe.plan.pro.f3")</li>
+            </ul>
+            <button type="button" class="plan-btn" disabled>@Loc.T("subscribe.button.soon")</button>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    protected override void OnInitialized() => Loc.OnChange += HandleLanguageChanged;
+
+    private void HandleLanguageChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Loc.OnChange -= HandleLanguageChanged;
+}

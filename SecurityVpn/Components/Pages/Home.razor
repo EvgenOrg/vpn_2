@@ -1,0 +1,208 @@
+@page "/"
+@implements IDisposable
+@inject VpnController Vpn
+@inject NodeStorage ns
+@inject VpnSettingsService Settings
+@inject LocalizationService Loc
+
+<div class="home-page">
+
+    <div class="home-hero">
+        <div class="hero-stars"></div>
+
+        <div class="hero-topbar">
+            <Logo Height="44" ShowText="true" />
+            <div class="conn-badge @StateClass">
+                <span class="conn-dot" style="background:@StatusColor; box-shadow: 0 0 10px @StatusColor;"></span>
+                <span>@StatusLabel</span>
+            </div>
+        </div>
+
+        <div class="hero-orb">
+            <div class="hero-planet">
+                <Planet State="@PlanetState" Country="@PlanetCountry" />
+            </div>
+            <div class="hero-ring ring-outer @(isRunning ? "is-active" : "")"></div>
+            <div class="hero-ring ring-inner @(isRunning ? "is-active" : "")"></div>
+            <button class="power-button @btnstatus"
+                    disabled="@(!isRunning && !isLoading && !CanConnect)"
+                    @onclick="vpnInteract"
+                    aria-label="@StatusLabel"></button>
+        </div>
+
+        <div class="hero-text">
+            <h1 @key="State">@StateTitle</h1>
+            <p>@(!isRunning && !isLoading && !CanConnect ? Loc.T("home.subtitle.noOnlineServer") : StateSubtitle)</p>
+            @if (Vpn.Error is not null)
+            {
+                <div class="hero-error" @key="Vpn.Error">@Vpn.Error</div>
+            }
+        </div>
+    </div>
+
+    <div class="home-content">
+
+        <div class="section-label reveal" style="--i:0">@Loc.T("home.section.currentServer")</div>
+        @if (SNode is not null && SNode.Id != Guid.Empty)
+        {
+            <ServerCard node="SNode" red="/servers" Index="1" />
+        }
+        else
+        {
+            <a href="/servers" class="no-server-card reveal" style="--i:1">
+                <div class="no-server-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                </div>
+                <div class="no-server-text">
+                    <strong>@Loc.T("home.noServer.title")</strong>
+                    <span>@Loc.T("home.noServer.subtitle")</span>
+                </div>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </a>
+        }
+
+        <div class="section-label reveal" style="--i:2">@Loc.T("home.section.stats")</div>
+        <div class="stats-grid">
+
+            <div class="stat-card reveal" style="--i:3">
+                <div class="stat-icon stat-icon-green">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14"></path><path d="m6 11 6 6 6-6"></path><path d="M5 21h14"></path></svg>
+                </div>
+                <span class="tnum">@Fmt.Speed(Vpn.DownBps, Loc)</span>
+                <small>@Loc.T("home.stat.download")</small>
+            </div>
+
+            <div class="stat-card reveal" style="--i:4">
+                <div class="stat-icon stat-icon-purple">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7"></path><path d="m6 13 6-6 6 6"></path><path d="M5 3h14"></path></svg>
+                </div>
+                <span class="tnum">@Fmt.Speed(Vpn.UpBps, Loc)</span>
+                <small>@Loc.T("home.stat.upload")</small>
+            </div>
+
+            <div class="stat-card reveal" style="--i:5">
+                <div class="stat-icon stat-icon-blue">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15 14"></polyline></svg>
+                </div>
+                <span class="tnum">@Fmt.Duration(Vpn.Uptime)</span>
+                <small>@Loc.T("home.stat.time")</small>
+            </div>
+
+        </div>
+
+        <div class="chips reveal" style="--i:6">
+            <span class="chip">VLESS</span>
+            <span class="chip">Reality</span>
+            <span class="chip">XTLS Vision</span>
+            <span class="chip">Xray-core</span>
+        </div>
+
+        <a href="/subscription" class="promo-card reveal" style="--i:7">
+            <div class="promo-text">
+                <strong>@Loc.T("home.promo.title")</strong>
+                <span>@Loc.T("home.promo.subtitle")</span>
+            </div>
+            <span class="promo-btn">@Loc.T("home.promo.button")</span>
+        </a>
+
+    </div>
+</div>
+
+@code {
+    private Node? SNode;
+    private string btnstatus = "";
+
+    private VpnState State => Vpn.State;
+    private bool isRunning => State == VpnState.Connected;
+    private bool isLoading => State == VpnState.Connecting;
+
+    // Подключаться можно только к реально выбранному онлайн-серверу
+    private bool CanConnect => SNode is not null && SNode.Id != Guid.Empty && SNode.IsOnline;
+
+    private string StateClass => isLoading ? "is-connecting" : isRunning ? "is-protected" : "";
+    private string StatusLabel => Loc.T(isLoading ? "home.status.connecting" : isRunning ? "home.status.protected" : "home.status.unprotected");
+    private string StatusColor => isLoading ? "#facc15" : isRunning ? "#4ade80" : "#a78bfa";
+    private string StateTitle => Loc.T(isLoading ? "home.title.connecting" : isRunning ? "home.title.protected" : "home.title.unprotected");
+    private string StateSubtitle => Loc.T(isRunning ? "home.subtitle.protected" : "home.subtitle.unprotected");
+
+    private string PlanetState => isRunning ? "connected" : isLoading ? "connecting" : "idle";
+    private string? PlanetCountry => SNode is { Id: var id } && id != Guid.Empty ? SNode.Country : null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Loc.OnChange += HandleChanged;
+        Vpn.OnChange += HandleChanged;
+        ns.OnChange += HandleNodesChanged;
+
+        SNode = ns.SelectedNode ?? Node.GetNullNode();
+        UpdateBtnStatus();
+
+        // Актуализируем доступность своих серверов (пинг в фоне, страницу не задерживаем)
+        _ = ns.RefreshStatusAsync();
+
+        // Сервер выбрали, пока VPN был включён — переподключаемся к новому
+        if (ns.HasChanged && isRunning && CanConnect && Vpn.Active?.Id != SNode.Id)
+        {
+            ns.HasChanged = false;
+            await Vpn.SwitchAsync(SNode);
+        }
+
+        ns.HasChanged = false;
+
+        if (Settings.AutoConnect && !Vpn.AutoConnectTried)
+            _ = AutoConnectAsync();
+    }
+
+    private async Task AutoConnectAsync()
+    {
+        Vpn.AutoConnectTried = true;
+
+        // для своего сервера сначала дожидаемся результата проверки доступности
+        if (SNode is { Id: var id, IsDemo: false } && id != Guid.Empty)
+            await ns.CheckAsync(SNode);
+
+        if (State == VpnState.Disconnected && CanConnect)
+            await Vpn.ConnectAsync(SNode!);
+    }
+
+    private void UpdateBtnStatus()
+    {
+        if (isLoading) btnstatus = "btn-loading";
+        else if (isRunning) btnstatus = "btnActive";
+        else btnstatus = "btnNot-Active";
+    }
+
+    private async Task vpnInteract()
+    {
+        if (isLoading) return;
+
+        if (isRunning)
+        {
+            await Vpn.DisconnectAsync();
+        }
+        else if (CanConnect)
+        {
+            await Vpn.ConnectAsync(SNode!);
+        }
+    }
+
+    private void HandleNodesChanged()
+    {
+        // Выбранный сервер мог поменять статус (закончилась проверка доступности)
+        SNode = ns.SelectedNode ?? Node.GetNullNode();
+        HandleChanged();
+    }
+
+    private void HandleChanged()
+    {
+        UpdateBtnStatus();
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        Loc.OnChange -= HandleChanged;
+        Vpn.OnChange -= HandleChanged;
+        ns.OnChange -= HandleNodesChanged;
+    }
+}

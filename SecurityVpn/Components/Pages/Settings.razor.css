@@ -1,0 +1,291 @@
+.settings-page {
+    min-height: 100vh;
+    background: var(--bg-app);
+}
+
+/* ===== Hero ===== */
+.settings-hero {
+    position: relative;
+    padding: 28px 24px 34px;
+    text-align: center;
+    color: white;
+    background: var(--hero-gradient);
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+    overflow: hidden;
+}
+
+    .settings-hero::before {
+        content: "";
+        position: absolute;
+        top: -50px;
+        right: -50px;
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(196, 181, 253, .22) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+.settings-hero-icon {
+    position: relative;
+    z-index: 1;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .14);
+    border: 1px solid rgba(255, 255, 255, .25);
+}
+
+.settings-hero h2 {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.settings-hero p {
+    position: relative;
+    z-index: 1;
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #ddd6fe;
+}
+
+/* ===== Body ===== */
+.settings-body {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 24px 20px 0;
+}
+
+.settings-section {
+    margin-bottom: 22px;
+}
+
+.settings-section-title {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+    padding-left: 4px;
+}
+
+.settings-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.settings-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-color-soft);
+}
+
+    .settings-row:last-child {
+        border-bottom: none;
+    }
+
+.settings-row-icon {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-blue {
+    background: rgba(139, 92, 246, .12);
+    color: #8b5cf6;
+}
+
+.icon-purple {
+    background: rgba(139, 92, 246, .12);
+    color: #8b5cf6;
+}
+
+.icon-orange {
+    background: rgba(249, 115, 22, .12);
+    color: #f97316;
+}
+
+.icon-green {
+    background: rgba(16, 185, 129, .12);
+    color: #10b981;
+}
+
+.icon-red {
+    background: rgba(244, 63, 94, .12);
+    color: #f43f5e;
+}
+
+.settings-row-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.settings-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.settings-sub {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+}
+
+/* ===== Select / input =====
+   Раньше <select>/<input> красились только своими CSS-переменными
+   (фон/цвет закрытого поля), но не получали color-scheme. Из-за этого
+   WebView2/Chromium рисовал ВЫПАДАЮЩИЙ СПИСОК select (сами <option>)
+   нативным светлым виджетом ОС — белый фон + системный тёмный текст,
+   но иногда именно светлый текст на светлом фоне (или наоборот) —
+   почему на тёмной теме выбрать язык/тему/протокол было невозможно
+   не глядя: сам список открывался, но был нечитаем.
+   Явно привязываем color-scheme к текущей теме, чтобы нативный
+   попап селекта тоже перекрашивался. */
+.settings-select,
+.settings-input {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color-soft);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    outline: none;
+    min-width: 120px;
+    flex-shrink: 0;
+    color-scheme: light;
+}
+
+[data-theme="dark"] .settings-select,
+[data-theme="dark"] .settings-input {
+    color-scheme: dark;
+}
+
+.settings-select option {
+    background: var(--bg-page);
+    color: var(--text-primary);
+}
+
+    .settings-select:focus,
+    .settings-input:focus {
+        border-color: var(--accent);
+    }
+
+.settings-action {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-color-soft);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+    .settings-action:last-child {
+        border-bottom: none;
+    }
+
+    .settings-action:hover {
+        background: var(--bg-hover);
+    }
+
+.settings-action-label {
+    flex: 1;
+    text-align: left;
+}
+
+.settings-action-hint {
+    color: var(--success);
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.settings-logout {
+    width: 100%;
+    margin-top: 4px;
+    padding: 14px;
+    border-radius: 16px;
+    border: 1px solid var(--danger-border);
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+}
+
+    .settings-logout:hover {
+        background: rgba(255, 87, 87, 0.18);
+    }
+
+    .settings-logout:active {
+        transform: scale(0.98);
+    }
+
+/* ===== Тогглы ===== */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: var(--switch-off);
+    transition: .3s;
+    border-radius: 24px;
+}
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+    }
+
+.switch input:checked + .slider {
+    background-color: #7c3aed;
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(18px);
+}
